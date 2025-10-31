@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tri Ân Thầy Cô</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;600&family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: linear-gradient(135deg, #fff0f5, #ffe6e6);
+      font-family: "Poppins", sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* --- Bong bóng bay --- */
+    .bubble {
+      position: absolute;
+      bottom: -100px;
+      background: rgba(255, 182, 193, 0.8);
+      border-radius: 50%;
+      animation: rise 8s infinite ease-in;
+      z-index: 5; /* nằm dưới video */
+    }
+    @keyframes rise {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-110vh) scale(1.5); opacity: 0; }
+    }
+
+    /* --- Tim bay --- */
+    .heart {
+      position: absolute;
+      bottom: -20px;
+      width: 20px;
+      height: 20px;
+      background: pink;
+      transform: rotate(45deg);
+      animation: floatUp 7s infinite ease-in;
+      z-index: 5; /* nằm dưới video */
+    }
+    .heart::before,
+    .heart::after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: pink;
+      border-radius: 50%;
+    }
+    .heart::before { top: -10px; left: 0; }
+    .heart::after { left: -10px; top: 0; }
+
+    @keyframes floatUp {
+      0% { transform: translateY(0) rotate(45deg) scale(1); opacity: 1; }
+      100% { transform: translateY(-120vh) rotate(45deg) scale(1.5); opacity: 0; }
+    }
+
+    /* --- Tiêu đề --- */
+    .title {
+      font-family: "Pacifico", cursive;
+      font-size: 2.2rem;
+      color: #e75480;
+      text-align: center;
+      margin-bottom: 15px;
+      z-index: 10;
+      animation: fadeInDown 1s ease;
+    }
+
+    /* --- Video --- */
+    .video-container {
+      position: relative;
+      z-index: 10;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+      animation: fadeIn 2s ease;
+    }
+
+    iframe {
+      width: 90vw;
+      max-width: 800px;
+      height: 450px;
+      border: none;
+      display: block;
+    }
+
+    /* --- Footer --- */
+    .thankyou {
+      font-family: 'Great Vibes', cursive;
+      font-size: 36px;
+      color: #d63384;
+      text-align: center;
+      margin-top: 20px;
+      z-index: 10;
+      animation: fadeInUp 1.2s ease;
+    }
+
+    /* --- Hiệu ứng chữ bay --- */
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+    @keyframes fadeInDown {
+      from {opacity: 0; transform: translateY(-20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    @keyframes fadeInUp {
+      from {opacity: 0; transform: translateY(20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+  </style>
+</head>
+<body>
+  <div class="title">💖 Tri Ân Thầy Cô 💖</div>
+
+  <div class="video-container">
+    <iframe 
+      src="https://drive.google.com/file/d/1T2rM21ySUbqZsn6BRinhOlOMODNKx8go/preview" 
+      allow="autoplay">
+    </iframe>
+  </div>
+
+  <div class="thankyou">Gửi lời cảm ơn sâu sắc đến thầy cô!</div>
+
+  <!-- Hiệu ứng bong bóng và tim -->
+  <script>
+    function createBubble() {
+      const bubble = document.createElement("div");
+      bubble.classList.add("bubble");
+      const size = Math.random() * 40 + 10;
+      bubble.style.width = `${size}px`;
+      bubble.style.height = `${size}px`;
+      bubble.style.left = `${Math.random() * 100}vw`;
+      bubble.style.animationDuration = `${6 + Math.random() * 4}s`;
+      document.body.appendChild(bubble);
+      setTimeout(() => bubble.remove(), 10000);
+    }
+
+    function createHeart() {
+      const heart = document.createElement("div");
+      heart.classList.add("heart");
+      heart.style.left = `${Math.random() * 100}vw`;
+      heart.style.animationDuration = `${5 + Math.random() * 3}s`;
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 8000);
+    }
+
+    setInterval(createBubble, 700);
+    setInterval(createHeart, 1200);
+  </script>
+</body>
+</html>
