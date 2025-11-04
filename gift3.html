@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday, My Love!</title>
+
+    <!-- font giống hình -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Quicksand", sans-serif;
+            background: radial-gradient(circle at 50% 30%, #ffe6ef 0%, #fbd6e3 40%, #fff 100%);
+            background-attachment: fixed;
+            background-size: cover;
+            animation: gradientMove 6s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* --- Bong bóng bay --- */
+        .bubble {
+            position: absolute;
+            bottom: -100px;
+            background: rgba(255, 182, 193, 0.8);
+            border-radius: 50%;
+            animation: rise 8s infinite ease-in;
+            z-index: -1;
+            /* nằm dưới video */
+        }
+
+        @keyframes rise {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-110vh) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* --- Tim bay --- */
+        .heart {
+            position: absolute;
+            bottom: -20px;
+            width: 20px;
+            height: 20px;
+            background: pink;
+            transform: rotate(45deg);
+            animation: floatUp 7s infinite ease-in;
+            z-index: -1;
+            /* nằm dưới video */
+        }
+
+        .heart::before,
+        .heart::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: pink;
+            border-radius: 50%;
+        }
+
+        .heart::before {
+            top: -10px;
+            left: 0;
+        }
+
+        .heart::after {
+            left: -10px;
+            top: 0;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) rotate(45deg) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-120vh) rotate(45deg) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes gradientMove {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .card {
+            background: #fde9ef;
+            border-radius: 25px;
+            display: flex;
+            width: 90%;
+            max-width: 1000px;
+            padding: 35px;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .film {
+            width: 34%;
+            background: #d48c98;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            margin-right: 35px;
+            position: relative;
+            gap: 0px;
+            /* khoảng cách giữa 2 ảnh */
+        }
+
+        /* text “FILM NEGATIVE” */
+        .film::before,
+        .film::after {
+            content: "FILM POSITIVE";
+            position: absolute;
+            top: 50%;
+            font-size: 10px;
+            color: #fceef1;
+            font-style: italic;
+            letter-spacing: 1px;
+            transform-origin: center;
+        }
+
+        .film::before {
+            left: -35px;
+            /* sát mép ngoài trái */
+            transform: rotate(-90deg) translateY(50%);
+        }
+
+        .film::after {
+            right: -25px;
+            /* sát mép ngoài phải */
+            transform: rotate(90deg) translateY(-50%);
+        }
+
+        .frame {
+            background: #ffffff;
+            width: 88%;
+            aspect-ratio: 1 / 0.58;
+            border: 3px solid #c06b7b;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .content {
+            width: 66%;
+            color: #8b4c57;
+        }
+
+        .content h1 {
+            color: #b44d61;
+            font-size: 28px;
+            margin-top: 0;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+        }
+
+        .content p {
+            line-height: 1.7;
+            font-size: 15px;
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+
+        .signature {
+            font-weight: 600;
+            text-decoration: underline;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .card {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .film {
+                width: 80%;
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+
+            .content {
+                width: 90%;
+                text-align: center;
+            }
+        }
+
+        /* --- Hiệu ứng chữ bay --- */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .back-btn {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd6e9, #ffbcd1, #ffe3f0);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+            color: #7b1f3a;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 52px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 20;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, #ffc8df, #ff9fbd, #ffd1e6);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="film">
+            <div class="frame">
+                <img src="https://i.ibb.co/TP5RkW2/sample1.png" alt="">
+            </div>
+            <div class="frame">
+                <img src="https://i.ibb.co/TP5RkW2/sample1.png" alt="">
+            </div>
+        </div>
+        <div class="content">
+            <h1>HAPPY BIRTHDAY, MY LOVE!</h1>
+            <p>
+                Happy birthday, my love! Today we celebrate you—the beautiful soul who makes my world brighter just by
+                being in it. From your smile that melts away my worries to the kindness you show everyone around you,
+                you’ve filled my life with so much joy and meaning. Every moment with you feels like a gift, and I’m
+                endlessly grateful for the laughter, the adventures, and even the quiet times we share together. You’re
+                the reason my days feel warmer, happier, and more complete.
+            </p>
+            <p>
+                As you step into another year of life, I just want you to know how deeply you’re loved and cherished. I
+                promise to keep standing by your side, cheering you on, and loving you in every season ahead. Thank you
+                for being my safe haven, my inspiration, and my greatest blessing. Here’s to celebrating you today, and
+                to all the beautiful memories we’ll continue to create. No matter what the future holds, I’ll always be
+                here, loving you endlessly.
+            </p>
+            <p class="signature">
+                Sincerely yours, The love of your life °‧✧
+            </p>
+        </div>
+    </div>
+    <script>
+        function createBubble() {
+      const bubble = document.createElement("div");
+      bubble.classList.add("bubble");
+      const size = Math.random() * 40 + 10;
+      bubble.style.width = `${size}px`;
+      bubble.style.height = `${size}px`;
+      bubble.style.left = `${Math.random() * 100}vw`;
+      bubble.style.animationDuration = `${6 + Math.random() * 4}s`;
+      document.body.appendChild(bubble);
+      setTimeout(() => bubble.remove(), 10000);
+    }
+
+    function createHeart() {
+      const heart = document.createElement("div");
+      heart.classList.add("heart");
+      heart.style.left = `${Math.random() * 100}vw`;
+      heart.style.animationDuration = `${5 + Math.random() * 3}s`;
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 8000);
+    }
+
+    setInterval(createBubble, 700);
+    setInterval(createHeart, 1200);
+    </script>
+    <a href="index.html" class="back-btn">↩</a>
+</body>
+
+</html>
