@@ -328,99 +328,124 @@
     </div>
     <script>
         (function(){
-  // helper: is image file
   function isImageSrc(src){
-    return /\.(jpg|png|webp|gif|bmp|svg)$/i.test(src);
+    return typeof src === 'string' && /\.(jpe?g|png|webp|gif|bmp|svg)$/i.test(src);
   }
 
-  // create overlay & show content node
-  function showOverlay(node){
+  // config
+  const MAX_SCALE = 4;   // giới hạn phóng lớn tối đa (thay nếu muốn)
+  const PADDING_W = 2;  // phần trăm chiều ngang tối đa cho ảnh (0..1)
+  const PADDING_H = 2;  // phần trăm chiều cao tối đa cho ảnh (0..1)
+
+  document.addEventListener('click', function(e){
+    const img = e.target.closest('img');
+    if(!img) return;
+    const src = img.getAttribute('src') || '';
+    if(!isImageSrc(src)) return;
+
+    // create overlay
     const overlay = document.createElement('div');
-    overlay.className = 'img-zoom-overlay';
     Object.assign(overlay.style, {
       position: 'fixed', inset: '0', display: 'flex',
       alignItems: 'center', justifyContent: 'center',
       background: 'rgba(0,0,0,0.66)', zIndex: 99999,
-      backdropFilter: 'blur(4px)', cursor: 'zoom-out'
+      cursor: 'zoom-out', transition: 'background .25s ease'
     });
-
-    // style node
-    node.style.maxWidth = '92vw';
-    node.style.maxHeight = '88vh';
-    node.style.borderRadius = '12px';
-    node.style.boxShadow = '0 30px 80px rgba(0,0,0,0.6)';
-    node.style.transition = 'transform .28s ease, opacity .28s ease';
-    node.style.transform = 'scale(.98)';
-    node.style.opacity = '0';
-
-    overlay.appendChild(node);
     document.body.appendChild(overlay);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
 
-    // animate in
-    requestAnimationFrame(()=>{
-      node.style.transform = 'scale(1)';
-      node.style.opacity = '1';
+    // clone and position
+    const rect = img.getBoundingClientRect();
+    const clone = img.cloneNode(true);
+    clone.removeAttribute('id');
+    Object.assign(clone.style, {
+      position: 'fixed',
+      left: rect.left + 'px',
+      top: rect.top + 'px',
+      width: rect.width + 'px',
+      height: rect.height + 'px',
+      objectFit: 'cover',
+      borderRadius: getComputedStyle(img).borderRadius || '8px',
+      boxShadow: '0 30px 80px rgba(0,0,0,0.45)',
+      transition: 'transform .45s cubic-bezier(.2,.9,.3,1), left .45s ease, top .45s ease, width .45s ease, height .45s ease, opacity .25s ease',
+      transformOrigin: 'center center',
+      zIndex: 100000,
+      willChange: 'transform, left, top, width, height'
+    });
+    overlay.appendChild(clone);
+
+    // compute scales to fit viewport
+    const maxW = window.innerWidth * PADDING_W;
+    const maxH = window.innerHeight * PADDING_H;
+    const scaleX = maxW / rect.width;
+    const scaleY = maxH / rect.height;
+    // choose scale so that at least one dimension fills (larger of the two),
+    // but cap by MAX_SCALE
+    let targetScale = Math.min(Math.max(scaleX, scaleY), MAX_SCALE);
+    if (targetScale < 1) targetScale = Math.min(1.05, MAX_SCALE); // ensure slight upscale if wanted
+
+    // compute translate to center after scale
+    const fromCx = rect.left + rect.width / 2;
+    const fromCy = rect.top + rect.height / 2;
+    const targetWidth = rect.width * targetScale;
+    const targetHeight = rect.height * targetScale;
+    const targetLeft = (window.innerWidth - targetWidth) / 2;
+    const targetTop = (window.innerHeight - targetHeight) / 2;
+
+    // animate via transform (translate + scale) for smoothness
+    const translateX = (window.innerWidth/2) - fromCx;
+    const translateY = (window.innerHeight/2) - fromCy;
+
+    // apply transform
+    requestAnimationFrame(()=> {
+      clone.style.transform = `translate(${translateX}px, ${translateY}px) scale(${targetScale})`;
     });
 
-    // remove function
-    function removeOverlay(){
-      node.style.transform = 'scale(.98)';
-      node.style.opacity = '0';
-      overlay.style.cursor = 'default';
-      setTimeout(()=> overlay.remove(), 260);
+    // allow wheel to zoom more/less while overlay open
+    let currentScale = targetScale;
+    function onWheel(evt){
+      evt.preventDefault();
+      const delta = -evt.deltaY; // positive = zoom in
+      const step = delta > 0 ? 0.08 : -0.08;
+      currentScale = Math.max(0.6, Math.min(MAX_SCALE, currentScale + step));
+      // update transform (recompute translation to keep center)
+      const newTranslateX = (window.innerWidth/2) - fromCx;
+      const newTranslateY = (window.innerHeight/2) - fromCy;
+      clone.style.transition = 'transform .12s linear';
+      clone.style.transform = `translate(${newTranslateX}px, ${newTranslateY}px) scale(${currentScale})`;
+      // restore longer transition after a moment
+      clearTimeout(clone._tt); clone._tt = setTimeout(()=> {
+        clone.style.transition = 'transform .45s cubic-bezier(.2,.9,.3,1)';
+      }, 200);
+    }
+    document.addEventListener('wheel', onWheel, {passive:false});
+
+    let closing = false;
+    function closeOverlay(){
+      if(closing) return;
+      closing = true;
+      // animate back
+      clone.style.transform = 'translate(0px, 0px) scale(1)';
+      overlay.style.background = 'rgba(0,0,0,0)';
+      setTimeout(()=> {
+        try { overlay.remove(); } catch(e){}
+        document.body.style.overflow = prevOverflow || '';
+      }, 420);
+      document.removeEventListener('wheel', onWheel);
       document.removeEventListener('keydown', onKey);
     }
-    overlay.addEventListener('click', (e)=>{
-      if(e.target === overlay) removeOverlay();
-    });
-    function onKey(e){ if(e.key === 'Escape') removeOverlay(); }
+    function onKey(ev){ if(ev.key === 'Escape') closeOverlay(); }
+
+    overlay.addEventListener('click', (ev)=> { if(ev.target === overlay) closeOverlay(); });
     document.addEventListener('keydown', onKey);
-  }
 
-  // click handler delegated to document
-  document.addEventListener('click', function(e){
-    const target = e.target;
-    // if click on an <img> or inside element that contains an img
-    const img = target.tagName === 'IMG' ? target : target.closest('img');
-    if(!img) return;
+    // prevent clicks on clone from closing accidentally; allow future custom actions
+    clone.addEventListener('click', (ev)=> { ev.stopPropagation(); });
 
-    const src = img.getAttribute('src') || '';
-    if(!isImageSrc(src)) return; // ignore non-image sources
-
-    // if image is inside a link <a>, prevent following unless modifier key
-    const parentA = img.closest('a');
-    if(parentA){
-      // allow ctrl/meta/shift to open link in new tab/window
-      if(e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) {
-        return; // let browser handle it
-      }
-      e.preventDefault();
-    } else {
-      // if img is standalone, prevent default (not much to prevent but safe)
-      e.preventDefault();
-    }
-
-    // create element to show: use a fresh <img> so sizing independent
-    const big = document.createElement('img');
-    big.src = src;
-    big.alt = img.alt || '';
-    // optional: pre-load to avoid flash (browsers may already cache)
-    big.onload = ()=> showOverlay(big);
-    // in case already cached
-    if(big.complete) showOverlay(big);
   }, false);
-
-  // optional: small CSS injected so we don't need to edit stylesheet
-  const css = `
-    .img-zoom-overlay img { display:block; max-width:92vw; max-height:88vh; }
-  `;
-  const style = document.createElement('style');
-  style.appendChild(document.createTextNode(css));
-  document.head.appendChild(style);
 })();
     </script>
-
-
 
 </body>
 <a href="index.html" class="back-btn">↩</a>
