@@ -326,44 +326,46 @@
             </div>
         </div>
     </div>
-<script>
-(function(){
-  // helper: create overlay and show contentNode (img or cloned node)
-  function showOverlay(contentNode) {
+    <script>
+        (function(){
+  // helper: is image file
+  function isImageSrc(src){
+    return /\.(jpg|png|webp|gif|bmp|svg)$/i.test(src);
+  }
+
+  // create overlay & show content node
+  function showOverlay(node){
     const overlay = document.createElement('div');
-    overlay.style.position = 'fixed';
-    overlay.style.inset = '0';
-    overlay.style.display = 'flex';
-    overlay.style.alignItems = 'center';
-    overlay.style.justifyContent = 'center';
-    overlay.style.background = 'rgba(0,0,0,0.6)';
-    overlay.style.zIndex = '99999';
-    overlay.style.backdropFilter = 'blur(4px)';
-    overlay.style.cursor = 'zoom-out';
-    overlay.className = 'zoom-overlay';
+    overlay.className = 'img-zoom-overlay';
+    Object.assign(overlay.style, {
+      position: 'fixed', inset: '0', display: 'flex',
+      alignItems: 'center', justifyContent: 'center',
+      background: 'rgba(0,0,0,0.66)', zIndex: 99999,
+      backdropFilter: 'blur(4px)', cursor: 'zoom-out'
+    });
 
-    // style content
-    contentNode.style.maxWidth = '92vw';
-    contentNode.style.maxHeight = '88vh';
-    contentNode.style.borderRadius = '14px';
-    contentNode.style.boxShadow = '0 30px 80px rgba(0,0,0,0.5)';
-    contentNode.style.transition = 'transform .28s ease, opacity .28s ease';
-    contentNode.style.transform = 'scale(.98)';
-    contentNode.style.opacity = '0';
+    // style node
+    node.style.maxWidth = '92vw';
+    node.style.maxHeight = '88vh';
+    node.style.borderRadius = '12px';
+    node.style.boxShadow = '0 30px 80px rgba(0,0,0,0.6)';
+    node.style.transition = 'transform .28s ease, opacity .28s ease';
+    node.style.transform = 'scale(.98)';
+    node.style.opacity = '0';
 
-    overlay.appendChild(contentNode);
+    overlay.appendChild(node);
     document.body.appendChild(overlay);
 
     // animate in
-    requestAnimationFrame(()=> {
-      contentNode.style.transform = 'scale(1)';
-      contentNode.style.opacity = '1';
+    requestAnimationFrame(()=>{
+      node.style.transform = 'scale(1)';
+      node.style.opacity = '1';
     });
 
-    // close handlers
-    function removeOverlay() {
-      contentNode.style.transform = 'scale(.98)';
-      contentNode.style.opacity = '0';
+    // remove function
+    function removeOverlay(){
+      node.style.transform = 'scale(.98)';
+      node.style.opacity = '0';
       overlay.style.cursor = 'default';
       setTimeout(()=> overlay.remove(), 260);
       document.removeEventListener('keydown', onKey);
@@ -375,69 +377,49 @@
     document.addEventListener('keydown', onKey);
   }
 
-  // main: attach listeners to .gift anchors (or other selectors)
+  // click handler delegated to document
   document.addEventListener('click', function(e){
-    const a = e.target.closest('a.gift, .gift');
-    if(!a) return; // not a gift
+    const target = e.target;
+    // if click on an <img> or inside element that contains an img
+    const img = target.tagName === 'IMG' ? target : target.closest('img');
+    if(!img) return;
 
-    // allow modifier to follow link: Ctrl/Meta/Shift => follow link normally
-    if (e.ctrlKey || e.metaKey || e.shiftKey) return;
+    const src = img.getAttribute('src') || '';
+    if(!isImageSrc(src)) return; // ignore non-image sources
 
-    // if it's an <a> with href and user wants to open in new tab (middle click), allow
-    if (e.button === 1) return;
-
-    // Prevent navigation (we'll show overlay instead)
-    if (a.tagName.toLowerCase() === 'a') e.preventDefault();
-
-    // Try 1: find img child
-    const img = a.querySelector('img');
-    if(img && img.src){
-      const big = document.createElement('img');
-      big.src = img.src;
-      big.alt = img.alt || '';
-      showOverlay(big);
-      return;
-    }
-
-    // Try 2: background-image on element (css)
-    const bg = getComputedStyle(a).backgroundImage;
-    if(bg && bg !== 'none'){
-      // extract url("...") content
-      const mUrl = bg.match(/url\((['"]?)(.*?)\1\)/);
-      if(mUrl && mUrl[2]){
-        const big = document.createElement('img');
-        big.src = mUrl[2];
-        showOverlay(big);
-        return;
+    // if image is inside a link <a>, prevent following unless modifier key
+    const parentA = img.closest('a');
+    if(parentA){
+      // allow ctrl/meta/shift to open link in new tab/window
+      if(e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) {
+        return; // let browser handle it
       }
-    }
-
-    // Try 3: if contains an .icon or emoji, clone and enlarge
-    const icon = a.querySelector('.icon') || a;
-    const clone = icon.cloneNode(true);
-    // wrap clone in a container to style background nicely
-    const box = document.createElement('div');
-    box.style.display = 'flex';
-    box.style.alignItems = 'center';
-    box.style.justifyContent = 'center';
-    box.style.padding = '28px';
-    box.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,240,248,0.9))';
-    box.style.borderRadius = '16px';
-    box.appendChild(clone);
-
-    // style the cloned icon/emoji to be big
-    // if clone is text/emoji, increase font-size; if it's an element with svg/text, scale.
-    if(getComputedStyle(clone).fontSize){
-      clone.style.fontSize = '96px';
-      clone.style.lineHeight = '1';
+      e.preventDefault();
     } else {
-      clone.style.transform = 'scale(2)';
+      // if img is standalone, prevent default (not much to prevent but safe)
+      e.preventDefault();
     }
 
-    showOverlay(box);
+    // create element to show: use a fresh <img> so sizing independent
+    const big = document.createElement('img');
+    big.src = src;
+    big.alt = img.alt || '';
+    // optional: pre-load to avoid flash (browsers may already cache)
+    big.onload = ()=> showOverlay(big);
+    // in case already cached
+    if(big.complete) showOverlay(big);
   }, false);
+
+  // optional: small CSS injected so we don't need to edit stylesheet
+  const css = `
+    .img-zoom-overlay img { display:block; max-width:92vw; max-height:88vh; }
+  `;
+  const style = document.createElement('style');
+  style.appendChild(document.createTextNode(css));
+  document.head.appendChild(style);
 })();
-</script>
+    </script>
+
 
 
 </body>
