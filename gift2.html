@@ -327,42 +327,118 @@
         </div>
     </div>
 <script>
-document.querySelectorAll('.jpg').forEach(img => {
-  img.style.cursor = 'pointer';
-  img.addEventListener('click', () => {
+(function(){
+  // helper: create overlay and show contentNode (img or cloned node)
+  function showOverlay(contentNode) {
     const overlay = document.createElement('div');
     overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100vw';
-    overlay.style.height = '100vh';
-    overlay.style.background = 'rgba(0,0,0,0.6)';
+    overlay.style.inset = '0';
     overlay.style.display = 'flex';
     overlay.style.alignItems = 'center';
     overlay.style.justifyContent = 'center';
-    overlay.style.zIndex = '9999';
+    overlay.style.background = 'rgba(0,0,0,0.6)';
+    overlay.style.zIndex = '99999';
     overlay.style.backdropFilter = 'blur(4px)';
+    overlay.style.cursor = 'zoom-out';
+    overlay.className = 'zoom-overlay';
 
-    const clone = img.cloneNode();
-    clone.style.maxWidth = '90vw';
-    clone.style.maxHeight = '85vh';
-    clone.style.borderRadius = '14px';
-    clone.style.boxShadow = '0 0 30px rgba(255,255,255,0.3)';
-    clone.style.transition = 'transform .3s ease';
-    clone.style.transform = 'scale(1.1)';
+    // style content
+    contentNode.style.maxWidth = '92vw';
+    contentNode.style.maxHeight = '88vh';
+    contentNode.style.borderRadius = '14px';
+    contentNode.style.boxShadow = '0 30px 80px rgba(0,0,0,0.5)';
+    contentNode.style.transition = 'transform .28s ease, opacity .28s ease';
+    contentNode.style.transform = 'scale(.98)';
+    contentNode.style.opacity = '0';
 
-    overlay.appendChild(clone);
+    overlay.appendChild(contentNode);
     document.body.appendChild(overlay);
 
-    // Đóng khi click ra ngoài ảnh
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        overlay.remove();
-      }
+    // animate in
+    requestAnimationFrame(()=> {
+      contentNode.style.transform = 'scale(1)';
+      contentNode.style.opacity = '1';
     });
-  });
-});
+
+    // close handlers
+    function removeOverlay() {
+      contentNode.style.transform = 'scale(.98)';
+      contentNode.style.opacity = '0';
+      overlay.style.cursor = 'default';
+      setTimeout(()=> overlay.remove(), 260);
+      document.removeEventListener('keydown', onKey);
+    }
+    overlay.addEventListener('click', (e)=>{
+      if(e.target === overlay) removeOverlay();
+    });
+    function onKey(e){ if(e.key === 'Escape') removeOverlay(); }
+    document.addEventListener('keydown', onKey);
+  }
+
+  // main: attach listeners to .gift anchors (or other selectors)
+  document.addEventListener('click', function(e){
+    const a = e.target.closest('a.gift, .gift');
+    if(!a) return; // not a gift
+
+    // allow modifier to follow link: Ctrl/Meta/Shift => follow link normally
+    if (e.ctrlKey || e.metaKey || e.shiftKey) return;
+
+    // if it's an <a> with href and user wants to open in new tab (middle click), allow
+    if (e.button === 1) return;
+
+    // Prevent navigation (we'll show overlay instead)
+    if (a.tagName.toLowerCase() === 'a') e.preventDefault();
+
+    // Try 1: find img child
+    const img = a.querySelector('img');
+    if(img && img.src){
+      const big = document.createElement('img');
+      big.src = img.src;
+      big.alt = img.alt || '';
+      showOverlay(big);
+      return;
+    }
+
+    // Try 2: background-image on element (css)
+    const bg = getComputedStyle(a).backgroundImage;
+    if(bg && bg !== 'none'){
+      // extract url("...") content
+      const mUrl = bg.match(/url\((['"]?)(.*?)\1\)/);
+      if(mUrl && mUrl[2]){
+        const big = document.createElement('img');
+        big.src = mUrl[2];
+        showOverlay(big);
+        return;
+      }
+    }
+
+    // Try 3: if contains an .icon or emoji, clone and enlarge
+    const icon = a.querySelector('.icon') || a;
+    const clone = icon.cloneNode(true);
+    // wrap clone in a container to style background nicely
+    const box = document.createElement('div');
+    box.style.display = 'flex';
+    box.style.alignItems = 'center';
+    box.style.justifyContent = 'center';
+    box.style.padding = '28px';
+    box.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,240,248,0.9))';
+    box.style.borderRadius = '16px';
+    box.appendChild(clone);
+
+    // style the cloned icon/emoji to be big
+    // if clone is text/emoji, increase font-size; if it's an element with svg/text, scale.
+    if(getComputedStyle(clone).fontSize){
+      clone.style.fontSize = '96px';
+      clone.style.lineHeight = '1';
+    } else {
+      clone.style.transform = 'scale(2)';
+    }
+
+    showOverlay(box);
+  }, false);
+})();
 </script>
+
 
 </body>
 <a href="index.html" class="back-btn">↩</a>
